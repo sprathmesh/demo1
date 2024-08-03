@@ -1,0 +1,51 @@
+pipeline{
+    agent any
+     
+    stages{
+        stage("Git Checkout"){
+            steps{
+                git credentialsId: 'javahome2', url: 'https://github.com/lakshmiprasad2019/myweb.git'
+            }
+        }
+        stage("Maven Build"){
+            steps{
+                sh "mvn clean sonar:sonar package"
+                
+            }
+        }
+        stage('Upload War To Nexus'){
+            steps{
+                  nexusArtifactUploader artifacts: [
+                       [
+                            artifactId: 'myweb', 
+                            classifier: '', 
+                            file: "target/myweb-8.2.6-SNAPSHOT.war", 
+                            type: 'war'
+                       ]
+                  ], 
+                  credentialsId: 'nexus3', 
+                  groupId: 'in.javahome', 
+                  nexusUrl: '172.31.38.174:8081', 
+                  nexusVersion: 'nexus3', 
+                  protocol: 'http', 
+                  repository: 'sample-snapshots', 
+                  version: '8.2.6-SNAPSHOT'  
+              }
+            }
+      #  stage("deploy-dev"){
+       #     steps{
+        #        sshagent(['tomcat-new']) {
+         #       sh """
+          #          scp -o StrictHostKeyChecking=no target/myweb-8.2.5.war  jenkins@192.168.1.80:/tomcatsoft/apache-tomcat-9.0.56/webapps
+           #         
+            #        ssh jenkins@192.168.1.80 /tomcatsoft/apache-tomcat-9.0.56/bin/shutdown.sh
+                    
+             #       ssh jenkins@192.168.1.80 /tomcatsoft/apache-tomcat-9.0.56/bin/startup.sh
+                
+              #  """
+            #}
+            
+            #}
+        }
+    }
+}
